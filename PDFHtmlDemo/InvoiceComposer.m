@@ -23,7 +23,7 @@
         
         _senderInfo = @"Gabriel Theodoropoulos<br>123 Somewhere Str.<br>10000 - MyCity<br>MyCountry";
         _dueDate = @"10/10/2017";
-        _logoImageURL = @"http://www.appcoda.com/wp-content/uploads/2015/12/blog-logo-dark-400.png";
+        _logoImageURL = @"http://www.html.am/images/image-codes/milford_sound_t.jpg";
         _invoiceNumber = @"101";
         _pdfFilename = @"test";
         _paymentMethod = @"Cash";
@@ -46,10 +46,19 @@
      
      NSLog(@"HTMLContent: %@", HTMLContent);
      
+    
+     // make sure you have the image name and extension (for demo purposes, I'm using "myImage" and "png" for the file "myImage.png", which may or may not be localized)
+     NSString *imagePath = [[NSBundle mainBundle] pathForResource:@"moutain" ofType:@"jpg"];
+     NSURL *fileURL = [[NSURL alloc] initFileURLWithPath:imagePath];
+     NSData *data = [NSData dataWithContentsOfURL:fileURL];
+
+     NSString *base64 = [data base64EncodedStringWithOptions:NSDataBase64Encoding64CharacterLineLength];
+     NSLog(@"base64: %@", base64);
+
      // Replace all the placeholders with real values except for the items.
      // The logo image.
-     HTMLContent = [[HTMLContent stringByReplacingOccurrencesOfString:@"#LOGO_IMAGE#" withString:_logoImageURL] mutableCopy];
-     
+     HTMLContent = [[HTMLContent stringByReplacingOccurrencesOfString:@"#LOGO_IMAGE#" withString:[NSString stringWithFormat:@"data:image/gif;base64,%@",base64]] mutableCopy];
+
      // Invoice number.
       HTMLContent = [[HTMLContent stringByReplacingOccurrencesOfString:@"#INVOICE_NUMBER#" withString:_invoiceNumber] mutableCopy];
      
@@ -112,6 +121,9 @@
  }
 
 
+
+
+
 -(void)exportHTMLContentToPDF:(NSString*)HTMLContent {
     
     CustomPrintPageRenderer *printPageRenderer = [[CustomPrintPageRenderer alloc]init];
@@ -120,7 +132,19 @@
 
     [printPageRenderer addPrintFormatter:printFormatter startingAtPageAtIndex:0];
     
-    NSMutableData * pdfData = [NSMutableData data];
+    /*
+    NSData *data = [self drawPDFUsingPrintPageRenderer:printPageRenderer];
+    
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    
+    NSString * pdfFile = [documentsDirectory stringByAppendingPathComponent:@"test.pdf"];
+    [data writeToFile:pdfFile atomically:YES];
+    NSLog(@"pdfFile path:%@",pdfFile);*/
+
+    
+    NSMutableData *pdfData = [NSMutableData data];
     
 
     UIGraphicsBeginPDFContextToData( pdfData, CGRectZero, nil );
@@ -146,23 +170,20 @@
     NSString * pdfFile = [documentsDirectory stringByAppendingPathComponent:@"test.pdf"];
     NSLog(@"pdfFile path:%@",pdfFile);
     [pdfData writeToFile:pdfFile atomically:YES];
+   
 }
 
 
-//func drawPDFUsingPrintPageRenderer(printPageRenderer: UIPrintPageRenderer) -> NSData! {
-//    let data = NSMutableData()
-//    
-//    UIGraphicsBeginPDFContextToData(data, CGRect.zero, nil)
-//    
-//    UIGraphicsBeginPDFPage()
-//    
-//    printPageRenderer.drawPage(at: 0, in: UIGraphicsGetPDFContextBounds())
-//    
-//    UIGraphicsEndPDFContext()
-//    
-//    return data
-//}
+-(NSData*)drawPDFUsingPrintPageRenderer:(UIPrintPageRenderer*)printPageRenderer {
+    
+    NSMutableData *data = [NSMutableData data];
+    UIGraphicsBeginPDFContextToData(data, CGRectZero, nil );
+    UIGraphicsBeginPDFPage();
+    [printPageRenderer drawPageAtIndex:0 inRect:UIGraphicsGetPDFContextBounds()];
+    UIGraphicsEndPDFContext();
 
+    return data;
+}
 
 
 @end
